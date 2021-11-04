@@ -204,7 +204,7 @@ def below_steer_speed_alert(CP: car.CarParams, sm: messaging.SubMaster, metric: 
 def calibration_incomplete_alert(CP: car.CarParams, sm: messaging.SubMaster, metric: bool) -> Alert:
   return Alert(
     "캘리브레이션 진행중입니다 : %d%%" % sm['liveCalibration'].calPerc,
-    f"속도를 {get_display_speed(MIN_SPEED_FILTER, metric)이상으로 높여주세요}",
+    f"속도를 {get_display_speed(MIN_SPEED_FILTER, metric)} 이상으로 높여주세요",
     AlertStatus.normal, AlertSize.mid,
     Priority.LOWEST, VisualAlert.none, AudibleAlert.none, 0., 0., .2)
 
