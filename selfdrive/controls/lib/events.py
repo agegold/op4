@@ -182,23 +182,30 @@ class NormalPermanentAlert(Alert):
                      Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., duration_text),
 
 
+# ********** helper functions **********
+def get_display_speed(speed_ms: float, metric: bool) -> str:
+  speed = int(round(speed_ms * (CV.MS_TO_KPH if metric else CV.MS_TO_MPH)))
+  unit = 'km/h' if metric else 'mph'
+  return f"{speed} {unit}"
+
+
 # ********** alert callback functions **********
+def below_engage_speed_alert(CP: car.CarParams, sm: messaging.SubMaster, metric: bool) -> Alert:
+  return NoEntryAlert(f"{get_display_speed(CP.minEnableSpeed, metric)}이하의 속도에서는 핸들을 잡아주세요")
+
+
 def below_steer_speed_alert(CP: car.CarParams, sm: messaging.SubMaster, metric: bool) -> Alert:
-  speed = int(round(CP.minSteerSpeed * (CV.MS_TO_KPH if metric else CV.MS_TO_MPH)))
-  unit = "km/h" if metric else "mph"
   return Alert(
-    "핸들을 잡아주세요",
-    "%d %s 이상의 속도에서 자동조향 됩니다." % (speed, unit),
-    AlertStatus.userPrompt, AlertSize.mid,
+    f"캘리브레이션 진행중입니다.{get_display_speed(CP.minSteerSpeed, metric)}",
+    "",
+    AlertStatus.userPrompt, AlertSize.small,
     Priority.MID, VisualAlert.steerRequired, AudibleAlert.chimePrompt, 0., 0.4, .3)
 
 
 def calibration_incomplete_alert(CP: car.CarParams, sm: messaging.SubMaster, metric: bool) -> Alert:
-  speed = int(MIN_SPEED_FILTER * (CV.MS_TO_KPH if metric else CV.MS_TO_MPH))
-  unit = "km/h" if metric else "mph"
   return Alert(
-    "캘리브레이션 진행중입니다 : %d%%" % sm['liveCalibration'].calPerc,
-    "속도를 %d %s 이상으로 주행 해주세요" % (speed, unit),
+    "캘리브레이션 진행중입니다.: %d%%" % sm['liveCalibration'].calPerc,
+    f"속도를 {get_display_speed(MIN_SPEED_FILTER, metric)} 이상으로 주행 해주세요",
     AlertStatus.normal, AlertSize.mid,
     Priority.LOWEST, VisualAlert.none, AudibleAlert.none, 0., 0., .2)
 
