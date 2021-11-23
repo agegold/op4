@@ -599,8 +599,8 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
   # See https://comma.ai/setup for more information
   EventName.calibrationInvalid: {
     ET.PERMANENT: NormalPermanentAlert("캘리브레이션 오류", "장치 위치변경후 캘리브레이션을 다시하세요"),
-    ET.SOFT_DISABLE: SoftDisableAlert("캘리브레이션 오류", "장치 위치변경후 캘리브레이션을 다시하세요"),
-    ET.NO_ENTRY: NoEntryAlert("캘리브레이션 오류", "장치 위치변경후 캘리브레이션을 다시하세요"),
+    ET.SOFT_DISABLE: SoftDisableAlert("캘리브레이션 오류 : 장치 위치변경후 캘리브레이션을 다시하세요"),
+    ET.NO_ENTRY: NoEntryAlert("캘리브레이션 오류 : 장치 위치변경후 캘리브레이션을 다시하세요"),
   },
 
   EventName.calibrationIncomplete: {
