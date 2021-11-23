@@ -260,7 +260,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
   },
 
   EventName.startup: {
-    ET.PERMANENT: StartupAlert("항상 핸들을 잡고 도로를 주시하세요",")
+    ET.PERMANENT: StartupAlert("항상 핸들을 잡고 도로를 주시하세요")
   },
 
   EventName.startupMaster: {
