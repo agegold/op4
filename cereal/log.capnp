@@ -307,6 +307,7 @@ struct DeviceState @0xa4d8b5af2aa492eb {
   chargingDisabled @18 :Bool;
   offroadPowerUsageUwh @23 :UInt32;
   carBatteryCapacityUwh @25 :UInt32;
+  powerDrawW @40 :Float32;
 
   # device thermals
   cpuTempC @26 :List(Float32);
@@ -315,12 +316,19 @@ struct DeviceState @0xa4d8b5af2aa492eb {
   ambientTempC @30 :Float32;
   nvmeTempC @35 :List(Float32);
   modemTempC @36 :List(Float32);
+  pmicTempC @39 :List(Float32);
+  thermalZones @38 :List(ThermalZone);
   thermalStatus @14 :ThermalStatus;
 
   fanSpeedPercentDesired @10 :UInt16;
   screenBrightnessPercent @37 :Int8;
   
-  wifiIpAddress @38 :Text;
+  wifiIpAddress @41 :Text;
+  
+   struct ThermalZone {
+    name @0 :Text;
+    temp @1 :Float32;
+  }
 
   enum ThermalStatus {
     green @0;
@@ -1508,9 +1516,10 @@ struct Event {
     # navigation
     navInstruction @82 :NavInstruction;
     navRoute @83 :NavRoute;
+    navThumbnail @84: Thumbnail;
     
     # neokii
-    roadLimitSpeed @84 :RoadLimitSpeed;
+    roadLimitSpeed @85 :RoadLimitSpeed;
 
     # *********** debug ***********
     testJoystick @52 :Joystick;
