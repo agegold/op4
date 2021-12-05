@@ -22,7 +22,7 @@ from selfdrive.hardware import EON, TICI, PC, HARDWARE
 from selfdrive.loggerd.config import get_available_percent
 from selfdrive.swaglog import cloudlog
 from selfdrive.thermald.power_monitoring import PowerMonitoring
-from selfdrive.version import tested_branch, terms_version, training_version
+from selfdrive.version import get_tested_branch, terms_version, training_version
 
 ThermalStatus = log.DeviceState.ThermalStatus
 NetworkType = log.DeviceState.NetworkType
@@ -66,6 +66,7 @@ def read_thermal(thermal_config):
   dat.deviceState.gpuTempC = [read_tz(z) / thermal_config.gpu[1] for z in thermal_config.gpu[0]]
   dat.deviceState.memoryTempC = read_tz(thermal_config.mem[0]) / thermal_config.mem[1]
   dat.deviceState.ambientTempC = read_tz(thermal_config.ambient[0]) / thermal_config.ambient[1]
+  dat.deviceState.pmicTempC = [read_tz(z) / thermal_config.pmic[1] for z in thermal_config.pmic[0]]
   return dat
 
 
@@ -126,9 +127,15 @@ def handle_fan_uno(controller, max_cpu_temp, fan_speed, ignition):
   return new_speed
 
 
+last_ignition = False
 def handle_fan_tici(controller, max_cpu_temp, fan_speed, ignition):
+  global last_ignition
+
   controller.neg_limit = -(80 if ignition else 30)
   controller.pos_limit = -(30 if ignition else 0)
+
+  if ignition != last_ignition:
+    controller.reset()
 
   fan_pwr_out = -int(controller.update(
                      setpoint=(75 if ignition else (OFFROAD_DANGER_TEMP - 2)),
@@ -136,6 +143,7 @@ def handle_fan_tici(controller, max_cpu_temp, fan_speed, ignition):
                      feedforward=interp(max_cpu_temp, [60.0, 100.0], [0, -80])
                   ))
 
+  last_ignition = ignition
   return fan_pwr_out
 
 
@@ -194,6 +202,7 @@ def thermald_thread():
   thermal_config = HARDWARE.get_thermal_config()
 
   restart_triggered_ts = 0.
+  panda_state_ts = 0.
 
   # TODO: use PI controller for UNO
   controller = PIController(k_p=0, k_i=2e-3, neg_limit=-80, pos_limit=0, rate=(1 / DT_TRML))
@@ -232,6 +241,7 @@ def thermald_thread():
           startup_conditions["ignition"] = False
       else:
         no_panda_cnt = 0
+        panda_state_ts = sec_since_boot()
         startup_conditions["ignition"] = pandaState.ignitionLine or pandaState.ignitionCan
 
       in_car = pandaState.harnessStatus != log.PandaState.HarnessStatus.notConnected
@@ -258,6 +268,12 @@ def thermald_thread():
           pandaState_prev.pandaType != log.PandaState.PandaType.unknown:
           params.clear_all(ParamKeyType.CLEAR_ON_PANDA_DISCONNECT)
       pandaState_prev = pandaState
+
+    else:
+      if sec_since_boot() - panda_state_ts > 3.:
+        if startup_conditions["ignition"]:
+          cloudlog.error("Lost panda connection while onroad")
+        startup_conditions["ignition"] = False
 
     # these are expensive calls. update every 10s
     if (count % int(10. / DT_TRML)) == 0:
@@ -339,38 +355,38 @@ def thermald_thread():
     set_offroad_alert_if_changed("Offroad_InvalidTime", (not startup_conditions["time_valid"]))
 
     # Show update prompt
-    #try:
-    #  last_update = now #datetime.datetime.fromisoformat(params.get("LastUpdateTime", encoding='utf8'))
-    #except (TypeError, ValueError):
-    #  last_update = now
-    #dt = now - last_update
+    try:
+      last_update = now #datetime.datetime.fromisoformat(params.get("LastUpdateTime", encoding='utf8'))
+    except (TypeError, ValueError):
+      last_update = now
+    dt = now - last_update
 
-    #update_failed_count = 0 #params.get("UpdateFailedCount")
-    #update_failed_count = 0 if update_failed_count is None else int(update_failed_count)
-    #last_update_exception = params.get("LastUpdateException", encoding='utf8')
+    update_failed_count = 0 #params.get("UpdateFailedCount")
+    update_failed_count = 0 if update_failed_count is None else int(update_failed_count)
+    last_update_exception = params.get("LastUpdateException", encoding='utf8')
 
-    #if update_failed_count > 15 and last_update_exception is not None:
-    #  if tested_branch:
-    #    extra_text = "Ensure the software is correctly installed"
-    #  else:
-    #    extra_text = last_update_exception
+    if update_failed_count > 15 and last_update_exception is not None:
+      if get_tested_branch():
+        extra_text = "Ensure the software is correctly installed"
+      else:
+        extra_text = last_update_exception
 
-    #  set_offroad_alert_if_changed("Offroad_ConnectivityNeeded", False)
-    #  set_offroad_alert_if_changed("Offroad_ConnectivityNeededPrompt", False)
-    #  set_offroad_alert_if_changed("Offroad_UpdateFailed", True, extra_text=extra_text)
-    #elif dt.days > DAYS_NO_CONNECTIVITY_MAX and update_failed_count > 1:
-    #  set_offroad_alert_if_changed("Offroad_UpdateFailed", False)
-    #  set_offroad_alert_if_changed("Offroad_ConnectivityNeededPrompt", False)
-    #  set_offroad_alert_if_changed("Offroad_ConnectivityNeeded", True)
-    #elif dt.days > DAYS_NO_CONNECTIVITY_PROMPT:
-    #  remaining_time = str(max(DAYS_NO_CONNECTIVITY_MAX - dt.days, 0))
-    #  set_offroad_alert_if_changed("Offroad_UpdateFailed", False)
-    #  set_offroad_alert_if_changed("Offroad_ConnectivityNeeded", False)
-    #  set_offroad_alert_if_changed("Offroad_ConnectivityNeededPrompt", True, extra_text=f"{remaining_time} days.")
-    #else:
-    #  set_offroad_alert_if_changed("Offroad_UpdateFailed", False)
-    #  set_offroad_alert_if_changed("Offroad_ConnectivityNeeded", False)
-    #  set_offroad_alert_if_changed("Offroad_ConnectivityNeededPrompt", False)
+      set_offroad_alert_if_changed("Offroad_ConnectivityNeeded", False)
+      set_offroad_alert_if_changed("Offroad_ConnectivityNeededPrompt", False)
+      set_offroad_alert_if_changed("Offroad_UpdateFailed", True, extra_text=extra_text)
+    elif dt.days > DAYS_NO_CONNECTIVITY_MAX and update_failed_count > 1:
+      set_offroad_alert_if_changed("Offroad_UpdateFailed", False)
+      set_offroad_alert_if_changed("Offroad_ConnectivityNeededPrompt", False)
+      set_offroad_alert_if_changed("Offroad_ConnectivityNeeded", True)
+    elif dt.days > DAYS_NO_CONNECTIVITY_PROMPT:
+      remaining = max(DAYS_NO_CONNECTIVITY_MAX - dt.days, 1)
+      set_offroad_alert_if_changed("Offroad_UpdateFailed", False)
+      set_offroad_alert_if_changed("Offroad_ConnectivityNeeded", False)
+      set_offroad_alert_if_changed("Offroad_ConnectivityNeededPrompt", True, extra_text=f"{remaining} day{'' if remaining == 1 else 's'}.")
+    else:
+      set_offroad_alert_if_changed("Offroad_UpdateFailed", False)
+      set_offroad_alert_if_changed("Offroad_ConnectivityNeeded", False)
+      set_offroad_alert_if_changed("Offroad_ConnectivityNeededPrompt", False)
 
     #startup_conditions["up_to_date"] = params.get("Offroad_ConnectivityNeeded") is None or params.get("DisableUpdates") == b"1"
     startup_conditions["not_uninstalling"] = not params.get_bool("DoUninstall")
@@ -414,6 +430,8 @@ def thermald_thread():
     power_monitor.calculate(peripheralState, startup_conditions["ignition"])
     msg.deviceState.offroadPowerUsageUwh = power_monitor.get_power_used()
     msg.deviceState.carBatteryCapacityUwh = max(0, power_monitor.get_car_battery_capacity())
+    current_power_draw = HARDWARE.get_current_power_draw()  # pylint: disable=assignment-from-none
+    msg.deviceState.powerDrawW = current_power_draw if current_power_draw is not None else 0
 
     # Check if we need to disable charging (handled by boardd)
     msg.deviceState.chargingDisabled = power_monitor.should_disable_charging(startup_conditions["ignition"], in_car, off_ts)
