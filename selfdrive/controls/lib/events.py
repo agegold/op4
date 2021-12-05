@@ -144,12 +144,10 @@ class Alert:
 
 
 class NoEntryAlert(Alert):
-  def __init__(self, alert_text_2, audible_alert=AudibleAlert.chimeError,
-               visual_alert=VisualAlert.none, duration_hud_alert=2.):
+  def __init__(self, alert_text_2, visual_alert=VisualAlert.none):
     super().__init__("오픈파일럿 사용불가", alert_text_2, AlertStatus.normal,
                      AlertSize.mid, Priority.LOW, visual_alert,
-                     audible_alert, .4, duration_hud_alert, 3.)
-
+                     AudibleAlert.refuse, 3.)
 
 class SoftDisableAlert(Alert):
   def __init__(self, alert_text_2):
