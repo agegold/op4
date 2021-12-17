@@ -152,7 +152,14 @@ class SoftDisableAlert(Alert):
                      Priority.MID, VisualAlert.steerRequired,
                      AudibleAlert.warningSoft, 2.),
 
-
+    
+# less harsh version of SoftDisable, where the condition is user-triggered
+class UserSoftDisableAlert(SoftDisableAlert):
+  def __init__(self, alert_text_2):
+    super().__init__(alert_text_2),
+    self.alert_text_1 = "openpilot will disengage"
+    
+    
 class ImmediateDisableAlert(Alert):
   def __init__(self, alert_text_2):
     super().__init__("핸들을 즉시 잡아주세요", alert_text_2,
@@ -191,6 +198,26 @@ def get_display_speed(speed_ms: float, metric: bool) -> str:
 
 
 # ********** alert callback functions **********
+
+AlertCallbackType = Callable[[car.CarParams, messaging.SubMaster, bool, int], Alert]
+
+
+def soft_disable_alert(alert_text_2: str) -> AlertCallbackType:
+  def func(CP: car.CarParams, sm: messaging.SubMaster, metric: bool, soft_disable_time: int) -> Alert:
+    #if soft_disable_time < int(0.5 / DT_CTRL):
+    #  return ImmediateDisableAlert(alert_text_2)
+    return SoftDisableAlert(alert_text_2)
+  return func
+
+
+def user_soft_disable_alert(alert_text_2: str) -> AlertCallbackType:
+  def func(CP: car.CarParams, sm: messaging.SubMaster, metric: bool, soft_disable_time: int) -> Alert:
+    #if soft_disable_time < int(0.5 / DT_CTRL):
+    #  return ImmediateDisableAlert(alert_text_2)
+    return UserSoftDisableAlert(alert_text_2)
+  return func
+
+
 def below_engage_speed_alert(CP: car.CarParams, sm: messaging.SubMaster, metric: bool) -> Alert:
   return NoEntryAlert(f"{get_display_speed(CP.minEnableSpeed, metric)}이하의 속도에서는 핸들을 잡아주세요")
 
