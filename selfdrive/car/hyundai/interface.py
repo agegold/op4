@@ -70,9 +70,9 @@ class CarInterface(CarInterfaceBase):
     ret.longitudinalTuning.kiV = [0.13, 0.08]
 
     ret.startAccel = -0.8
-    ret.stopAccel = -2.0
+    ret.stopAccel = -1.0
     ret.startingAccelRate = 5.0  # brake_travel/s while releasing on restart
-    ret.stoppingDecelRate = 0.6  # brake_travel/s while trying to stop
+    ret.stoppingDecelRate = 0.8  # brake_travel/s while trying to stop
     ret.vEgoStopping = 0.6
     ret.vEgoStarting = 0.5
 
