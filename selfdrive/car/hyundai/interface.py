@@ -150,6 +150,11 @@ class CarInterface(CarInterfaceBase):
       ret.wheelbase = 2.7
       tire_stiffness_factor = 0.7
       ret.centerToFront = ret.wheelbase * 0.4
+    elif candidate == CAR.KONA_:
+      ret.mass = 1275. + STD_CARGO_KG
+      ret.wheelbase = 2.7
+      tire_stiffness_factor = 0.7
+      ret.centerToFront = ret.wheelbase * 0.4
     elif candidate in [CAR.KONA_HEV, CAR.KONA_EV]:
       ret.mass = 1395. + STD_CARGO_KG
       ret.wheelbase = 2.6
