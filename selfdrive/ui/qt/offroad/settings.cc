@@ -185,16 +185,6 @@ DevicePanel::DevicePanel(SettingsWindow *parent) : ListWidget(parent) {
   QHBoxLayout *power_layout = new QHBoxLayout();
   power_layout->setSpacing(30);
 
-  QPushButton *reboot_btn = new QPushButton("재부팅");
-  reboot_btn->setObjectName("reboot_btn");
-  power_layout->addWidget(reboot_btn);
-  QObject::connect(reboot_btn, &QPushButton::clicked, this, &DevicePanel::reboot);
-
-  QPushButton *poweroff_btn = new QPushButton("전원 종료");
-  poweroff_btn->setObjectName("poweroff_btn");
-  power_layout->addWidget(poweroff_btn);
-  QObject::connect(poweroff_btn, &QPushButton::clicked, this, &DevicePanel::poweroff);
-
   QPushButton *gitpull_btn = new QPushButton("소프트웨어 업데이트");
   poweroff_btn->setObjectName("gitpull_btn");
   power_layout->addWidget(gitpull_btn);
@@ -207,6 +197,17 @@ DevicePanel::DevicePanel(SettingsWindow *parent) : ListWidget(parent) {
        Hardware::reboot(); });
     }
   });
+
+  QPushButton *reboot_btn = new QPushButton("재부팅");
+  reboot_btn->setObjectName("reboot_btn");
+  power_layout->addWidget(reboot_btn);
+  QObject::connect(reboot_btn, &QPushButton::clicked, this, &DevicePanel::reboot);
+
+  QPushButton *poweroff_btn = new QPushButton("전원 종료");
+  poweroff_btn->setObjectName("poweroff_btn");
+  power_layout->addWidget(poweroff_btn);
+  QObject::connect(poweroff_btn, &QPushButton::clicked, this, &DevicePanel::poweroff);
+
   if (Hardware::TICI()) {
     connect(uiState(), &UIState::offroadTransition, poweroff_btn, &QPushButton::setVisible);
   }
