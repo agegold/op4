@@ -173,7 +173,7 @@ DevicePanel::DevicePanel(SettingsWindow *parent) : ListWidget(parent) {
       std::system(cal_ok);
     }
   });
-  layout->addWidget(calokbtn);
+    addItem(calokbtn);
 
   if (Hardware::TICI()) {
     auto regulatoryBtn = new ButtonControl("Regulatory", "VIEW", "");
