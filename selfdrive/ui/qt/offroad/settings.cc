@@ -185,7 +185,7 @@ DevicePanel::DevicePanel(SettingsWindow *parent) : ListWidget(parent) {
   QHBoxLayout *power_layout = new QHBoxLayout();
   power_layout->setSpacing(30);
 
-  QPushButton *reboot_btn = new QPushButton("재부");
+  QPushButton *reboot_btn = new QPushButton("재부팅");
   reboot_btn->setObjectName("reboot_btn");
   power_layout->addWidget(reboot_btn);
   QObject::connect(reboot_btn, &QPushButton::clicked, this, &DevicePanel::reboot);
@@ -194,6 +194,21 @@ DevicePanel::DevicePanel(SettingsWindow *parent) : ListWidget(parent) {
   poweroff_btn->setObjectName("poweroff_btn");
   power_layout->addWidget(poweroff_btn);
   QObject::connect(poweroff_btn, &QPushButton::clicked, this, &DevicePanel::poweroff);
+  
+  QPushButton *gitpull_btn = new QPushButton("소프트웨어 업데이트");
+  poweroff_btn->setObjectName("gitpull_btn");
+  power_layout->addWidget(gitpull_btn);
+
+  const char* gitpull = "sh /data/openpilot/gitpull.sh";
+  QObject::connect(gitpull_btn, &QPushButton::clicked, [=]() {
+    std::system(gitpull);
+    if (ConfirmationDialog::confirm("업데이트가 완료 되었습니다. 재부팅 하시겠습니까?", this)) {
+      QTimer::singleShot(1000, []() { 
+       Hardware::reboot(); });
+    }
+  });
+
+
 
   if (Hardware::TICI()) {
     connect(uiState(), &UIState::offroadTransition, poweroff_btn, &QPushButton::setVisible);
