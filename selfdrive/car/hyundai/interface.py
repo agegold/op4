@@ -24,8 +24,8 @@ class CarInterface(CarInterfaceBase):
 
     v_current_kph = current_speed * CV.MS_TO_KPH
 
-    gas_max_bp = [0., 10., 20., 50., 70., 130., 150.]
-    gas_max_v = [CarControllerParams.ACCEL_MAX, 1.3, 0.8, 0.65, 0.47, 0.16, 0.1]
+    gas_max_bp = [10., 20., 50., 70., 130., 150.]
+    gas_max_v = [1.5, 1.1, 0.65, 0.47, 0.16, 0.1]
 
     return CarControllerParams.ACCEL_MIN, interp(v_current_kph, gas_max_bp, gas_max_v)
 
@@ -55,7 +55,7 @@ class CarInterface(CarInterfaceBase):
     ret.lateralTuning.lqr.l = [0.3233671, 0.3185757]
     
     ret.steerRatio = 16.5
-    ret.steerActuatorDelay = 0.15
+    ret.steerActuatorDelay = 0.2
     ret.steerRateCost = 0.35
 
     ret.steerLimitTimer = 2.5
@@ -64,14 +64,14 @@ class CarInterface(CarInterfaceBase):
     ret.longitudinalTuning.kpBP = [0., 5.*CV.KPH_TO_MS, 10.*CV.KPH_TO_MS, 20.*CV.KPH_TO_MS, 130.*CV.KPH_TO_MS]
     ret.longitudinalTuning.kpV = [1.25, 1.1, 1.0, 0.85, 0.48]
     ret.longitudinalTuning.kiBP = [0., 130. * CV.KPH_TO_MS]
-    ret.longitudinalTuning.kiV = [0.08, 0.04]
-    ret.longitudinalActuatorDelayLowerBound = 0.3
+    ret.longitudinalTuning.kiV = [0.06, 0.01]
+    ret.longitudinalActuatorDelayLowerBound = 0.5
     ret.longitudinalActuatorDelayUpperBound = 0.5
 
     ret.stopAccel = -2.0
     ret.stoppingDecelRate = 0.5  # brake_travel/s while trying to stop
-    ret.vEgoStopping = 0.5
-    ret.vEgoStarting = 0.5
+    ret.vEgoStopping = 0.4
+    ret.vEgoStarting = 0.4
 
     # genesis
     if candidate == CAR.GENESIS:
@@ -227,17 +227,22 @@ class CarInterface(CarInterfaceBase):
       ret.wheelbase = 2.7
       tire_stiffness_factor = 0.7
       ret.centerToFront = ret.wheelbase * 0.4
-    elif candidate in [CAR.K7, CAR.K7_HEV]:
-      tire_stiffness_factor = 0.7
-      ret.mass = 1650. + STD_CARGO_KG
-      ret.wheelbase = 2.855
-      ret.centerToFront = ret.wheelbase * 0.4
-      ret.steerRatio = 17.5
     elif candidate == CAR.SELTOS:
       ret.mass = 1310. + STD_CARGO_KG
       ret.wheelbase = 2.6
       tire_stiffness_factor = 0.7
       ret.centerToFront = ret.wheelbase * 0.4
+    elif candidate == CAR.MOHAVE:
+      ret.mass = 2285. + STD_CARGO_KG
+      ret.wheelbase = 2.895
+      ret.centerToFront = ret.wheelbase * 0.5
+      tire_stiffness_factor = 0.8
+    elif candidate in [CAR.K7, CAR.K7_HEV]:
+      tire_stiffness_factor = 0.7
+      ret.mass = 1650. + STD_CARGO_KG
+      ret.wheelbase = 2.855
+      ret.centerToFront = ret.wheelbase * 0.4
+      ret.steerRatio = 17.25
     elif candidate == CAR.K9:
       ret.mass = 2005. + STD_CARGO_KG
       ret.wheelbase = 3.15
