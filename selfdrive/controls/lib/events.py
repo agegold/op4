@@ -1,3 +1,4 @@
+import os
 from enum import IntEnum
 from typing import Dict, Union, Callable, List, Optional
 
@@ -6,6 +7,7 @@ import cereal.messaging as messaging
 from common.conversions import Conversions as CV
 from common.realtime import DT_CTRL
 from selfdrive.locationd.calibrationd import MIN_SPEED_FILTER
+from selfdrive.version import get_short_branch
 
 AlertSize = log.ControlsState.AlertSize
 AlertStatus = log.ControlsState.AlertStatus
@@ -28,6 +30,7 @@ class Priority(IntEnum):
 class ET:
   ENABLE = 'enable'
   PRE_ENABLE = 'preEnable'
+  OVERRIDE = 'override'
   NO_ENTRY = 'noEntry'
   WARNING = 'warning'
   USER_DISABLE = 'userDisable'
@@ -206,7 +209,6 @@ def soft_disable_alert(alert_text_2: str) -> AlertCallbackType:
     return SoftDisableAlert(alert_text_2)
   return func
 
-
 def user_soft_disable_alert(alert_text_2: str) -> AlertCallbackType:
   def func(CP: car.CarParams, sm: messaging.SubMaster, metric: bool, soft_disable_time: int) -> Alert:
     #if soft_disable_time < int(0.5 / DT_CTRL):
@@ -214,6 +216,12 @@ def user_soft_disable_alert(alert_text_2: str) -> AlertCallbackType:
     return UserSoftDisableAlert(alert_text_2)
   return func
 
+def startup_master_alert(CP: car.CarParams, sm: messaging.SubMaster, metric: bool, soft_disable_time: int) -> Alert:
+  branch = get_short_branch("")
+  if "REPLAY" in os.environ:
+    branch = "replay"
+
+  return StartupAlert("WARNING: This branch is not tested", branch, alert_status=AlertStatus.userPrompt)
 
 def below_engage_speed_alert(CP: car.CarParams, sm: messaging.SubMaster, metric: bool, soft_disable_time: int) -> Alert:
   return NoEntryAlert(f"{get_display_speed(CP.minEnableSpeed, metric)} 이하의 속도에서는 핸들을 잡아주세요")
@@ -357,14 +365,6 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
   },
 
   # ********** events only containing alerts that display while engaged **********
-
-  EventName.gasPressed: {
-    ET.PRE_ENABLE: Alert(
-      "가속패달감지시 오픈파일럿은 브레이크를 사용하지않습니다",
-      "",
-      AlertStatus.normal, AlertSize.small,
-      Priority.LOWEST, VisualAlert.none, AudibleAlert.none, .1, creation_delay=1.),
-  },
 
   # openpilot tries to learn certain parameters about your car by observing
   # how the car behaves to steering inputs from both human and openpilot driving.
@@ -549,6 +549,22 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
     ET.USER_DISABLE: EngagementAlert(AudibleAlert.disengage),
     ET.NO_ENTRY: NoEntryAlert("브레이크 감지됨",
                               visual_alert=VisualAlert.brakePressed),
+  },
+
+  EventName.pedalPressedPreEnable: {
+    ET.PRE_ENABLE: Alert(
+      "오픈파일럿 인게이지를 위해 페달을 밟지 마세요",
+      "",
+      AlertStatus.normal, AlertSize.small,
+      Priority.LOWEST, VisualAlert.none, AudibleAlert.none, .1, creation_delay=1.),
+  },
+
+  EventName.gasPressedOverride: {
+    ET.OVERRIDE: Alert(
+      "",
+      "",
+      AlertStatus.normal, AlertSize.none,
+      Priority.LOWEST, VisualAlert.none, AudibleAlert.none, .1),
   },
 
   EventName.wrongCarMode: {
