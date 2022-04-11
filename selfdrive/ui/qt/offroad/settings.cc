@@ -71,6 +71,12 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       "이 모드에서 openpilot은 차선을 무시하고 사람이 생각하는대로 운전합니다.",
       "../assets/offroad/icon_road.png",
     },
+    {
+      "DisengageOnAccelerator",
+      "Disengage On Accelerator Pedal",
+      "When enabled, pressing the accelerator pedal will disengage openpilot.",
+      "../assets/offroad/icon_disengage_on_accelerator.svg",
+    },
 #ifdef ENABLE_MAPS
     {
       "NavSettingTime24h",
