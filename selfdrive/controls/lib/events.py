@@ -296,8 +296,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
   },
 
   EventName.startupMaster: {
-    ET.PERMANENT: StartupAlert("경고: 이 브랜치는 테스트 되지 않았습니다.",
-                               alert_status=AlertStatus.userPrompt),
+    ET.PERMANENT: startup_master_alert,
   },
 
   # Car is recognized, but marked as dashcam only
@@ -500,9 +499,13 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
     ET.PERMANENT: NormalPermanentAlert("팬 오작동", "하드웨어를 점검하세요"),
   },
 
-  # Camera is not outputting frames at a constant framerate
+  # Camera is not outputting frames
   EventName.cameraMalfunction: {
     ET.PERMANENT: NormalPermanentAlert("카메라 작동 오류", "하드웨어를 점검하세요"),
+  },
+  # Camera framerate too low
+  EventName.cameraFrameRate: {
+    ET.PERMANENT: NormalPermanentAlert("카메라 프레임 레이트가 낮습니다.", "재부팅 하세요"),
   },
 
   # Unused
@@ -669,6 +672,10 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
     ET.SOFT_DISABLE: SoftDisableAlert("장치 프로세스 통신오류"),
     ET.NO_ENTRY: NoEntryAlert("장치 프로세스 통신오류"),
   },
+  EventName.commIssueAvgFreq: {
+    ET.SOFT_DISABLE: soft_disable_alert("장치 프로세스 레이트가 낮습니다."),
+    ET.NO_ENTRY: NoEntryAlert("장치 프로세스 레이트가 낮습니다."),
+  },
 
   # Thrown when manager detects a service exited unexpectedly while driving
   EventName.processNotRunning: {
@@ -766,6 +773,8 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
       Priority.LOW, VisualAlert.none, AudibleAlert.none, 1., creation_delay=1.),
     ET.NO_ENTRY: NoEntryAlert("CAN Error: Check Connections"),
   },
+
+  EventName.canBusMissing: {},
 
   EventName.steerUnavailable: {
     ET.IMMEDIATE_DISABLE: ImmediateDisableAlert("LKAS 오류 : 차량을 재가동하세요"),
