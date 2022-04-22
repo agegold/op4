@@ -47,16 +47,7 @@ class CarInterface(CarInterfaceBase):
 
     # lateral
     lateral_control = Params().get("LateralControl", encoding='utf-8')
-    if lateral_control == 'TORQUE':
-      ret.lateralTuning.init('torque')
-      ret.lateralTuning.torque.useSteeringAngle = True
-      max_lat_accel = 2.5
-      ret.lateralTuning.torque.kp = 2.0 / max_lat_accel
-      ret.lateralTuning.torque.kf = 1.0 / max_lat_accel
-      ret.lateralTuning.torque.friction = 0.6
-      ret.lateralTuning.torque.ki = 0.5 / max_lat_accel
-      ret.lateralTuning.torque.kd = 0.0
-    elif lateral_control == 'INDI':
+    if lateral_control == 'INDI':
       ret.lateralTuning.init('indi')
       ret.lateralTuning.indi.innerLoopGainBP = [0.]
       ret.lateralTuning.indi.innerLoopGainV = [3.3]
@@ -68,7 +59,7 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.indi.actuatorEffectivenessV = [1.8]
     elif lateral_control == 'LQR':
       ret.lateralTuning.init('lqr')
-
+      
       ret.lateralTuning.lqr.scale = 1680.
       ret.lateralTuning.lqr.ki = 0.01
       ret.lateralTuning.lqr.dcGain = 0.002858
@@ -79,7 +70,13 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.lqr.k = [-110.73572306, 451.22718255]
       ret.lateralTuning.lqr.l = [0.3233671, 0.3185757]
     else:
-      ret.lateralTuning.init('hybrid')
+      ret.lateralTuning.init('torque')
+      ret.lateralTuning.torque.useSteeringAngle = True
+      max_lat_accel = 2.5
+      ret.lateralTuning.torque.kp = 2.0 / max_lat_accel
+      ret.lateralTuning.torque.kf = 1.0 / max_lat_accel
+      ret.lateralTuning.torque.friction = 0.6
+      ret.lateralTuning.torque.ki = 0.5 / max_lat_accel
 
 
     ret.steerRatio = 16.5
